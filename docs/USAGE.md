@@ -281,11 +281,56 @@ tasks:
 }
 ```
 
-実行後、各 worktree は **残ったまま** になります。レビュー後に手動で削除してください。
+実行後、各 worktree は **残ったまま** になります。レビュー後に削除してください。手動なら:
 
 ```bash
 git worktree list
 git worktree remove ../worktrees/store-pagination
+```
+
+ゲート経由で削除するなら `codex_cleanup_worktrees` を使います(下記)。
+
+---
+
+## `codex_cleanup_worktrees`
+
+`codex_parallel_tasks` が残した worktree を一覧・削除する。Codex は呼ばない純粋な git 操作。
+
+### 入力
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| `worktree_paths` | string[] | | 削除する worktree のパス。相対なら `PROJECT_ROOT` 基準。**省略/空なら一覧のみ返し、削除はしない**。 |
+
+### 安全制約
+
+- **メイン作業ツリー (`PROJECT_ROOT` 自身) は削除しない**。
+- `git worktree list` に登録された worktree のみ削除可能(任意ディレクトリの削除は不可)。
+- 削除は `git worktree remove --force` 相当のみ。生の `rm` はしない。
+- パスは正規化して比較する(例: macOS の `/tmp` → `/private/tmp` でも一致)。
+
+### 出力
+
+```typescript
+{
+  worktrees: Array<{ path: string; branch: string | null; isMain: boolean }>; // 現在の一覧
+  removed: string[];                              // 削除できた worktree
+  errors: Array<{ path: string; reason: string }>; // 削除できなかったものと理由
+  next_action: string;
+}
+```
+
+### 呼び出し例
+
+```
+# まず一覧を確認
+codex_cleanup_worktrees を呼んでください (worktree_paths は指定しない)。
+
+# レビュー後、不要な worktree を削除
+codex_cleanup_worktrees を呼んでください:
+worktree_paths:
+  - ../worktrees/store-pagination
+  - ../worktrees/user-settings-test
 ```
 
 ---

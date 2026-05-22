@@ -43,6 +43,7 @@ Git worktree / feature branch
 | `codex_review_fix` | レビュー指摘の修正 | Claude Code が `git diff` を読んで挙げた指摘だけを Codex に直させる |
 | `codex_inspect_diff` | 差分のレビュー整形 | `main..HEAD` 等の差分を `changed_files` / `risk_points` / `review_checklist` で返す |
 | `codex_parallel_tasks` | worktree 並列実行 | 互いに独立した複数タスクを並列で走らせる(共通領域は事前検査で拒否) |
+| `codex_cleanup_worktrees` | worktree の一覧/削除 | `codex_parallel_tasks` が残した worktree を一覧し、安全に削除する(メイン作業ツリーは保護、登録済み worktree のみ削除) |
 
 各ツールの入出力スキーマは [`docs/USAGE.md`](./docs/USAGE.md) を参照。
 
@@ -113,7 +114,7 @@ claude mcp add codex-gateway -- node /absolute/path/to/codex-gateway-mcp/dist/in
 /mcp
 ```
 
-`codex-gateway` の下に4つのツールが出れば成功です。
+`codex-gateway` の下に5つのツールが出れば成功です。
 
 ---
 
@@ -205,7 +206,8 @@ codex-gateway-mcp/
 │  │  ├─ codexImplement.ts
 │  │  ├─ codexReviewFix.ts
 │  │  ├─ codexInspectDiff.ts
-│  │  └─ codexParallelTasks.ts
+│  │  ├─ codexParallelTasks.ts
+│  │  └─ codexCleanupWorktrees.ts
 │  └─ core/
 │     ├─ codexExec.ts           # Codex CLI 呼び出し
 │     ├─ runCommand.ts          # 汎用 subprocess
@@ -253,7 +255,7 @@ MCP プロトコルの疎通確認:
 } | node dist/index.js
 ```
 
-4つのツール (`codex_implement`, `codex_review_fix`, `codex_inspect_diff`, `codex_parallel_tasks`) が返ってくれば疎通OKです。
+5つのツール (`codex_implement`, `codex_review_fix`, `codex_inspect_diff`, `codex_parallel_tasks`, `codex_cleanup_worktrees`) が返ってくれば疎通OKです。
 
 ---
 

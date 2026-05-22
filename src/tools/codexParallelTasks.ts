@@ -32,7 +32,7 @@ const TaskSchema = z
     branch_name: z
       .string()
       .min(1)
-      .regex(/^[A-Za-z0-9._\-\/]+$/, "branch_name に使える文字は英数字 . _ - / のみです。"),
+      .regex(/^[A-Za-z0-9._\-/]+$/, "branch_name に使える文字は英数字 . _ - / のみです。"),
     worktree_path: z.string().min(1),
     objective: z.string().min(10).max(4000),
     allowed_paths: z.array(z.string().min(1)).min(1),

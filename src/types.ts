@@ -115,6 +115,17 @@ export interface CodexInspectDiffOutput {
 }
 
 // ---------------------------------------------------------------------------
+// Tool input/output - codex_cleanup_worktrees
+// ---------------------------------------------------------------------------
+
+export interface CodexCleanupWorktreesOutput {
+  worktrees: Array<{ path: string; branch: string | null; isMain: boolean }>;
+  removed: string[];
+  errors: Array<{ path: string; reason: string }>;
+  next_action: string;
+}
+
+// ---------------------------------------------------------------------------
 // Tool input/output - codex_parallel_tasks
 // ---------------------------------------------------------------------------
 

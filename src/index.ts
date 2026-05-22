@@ -2,10 +2,11 @@
 /**
  * codex-gateway-mcp-server
  *
- * MCP gateway that exposes Codex CLI as four controlled tools:
+ * MCP gateway that exposes Codex CLI as five controlled tools:
  *   - codex_implement     : limited-scope implementation
  *   - codex_review_fix    : post-review fixes (no new design)
  *   - codex_inspect_diff  : structured diff review packet for Claude
+ *   - codex_cleanup_worktrees: list/remove git worktrees safely
  *   - codex_parallel_tasks: parallel execution via git worktrees
  *
  * Transport: stdio (this server is launched as a subprocess by Claude
@@ -31,6 +32,10 @@ import {
   CodexInspectDiffInputSchema,
   handleCodexInspectDiff,
 } from "./tools/codexInspectDiff.js";
+import {
+  CodexCleanupWorktreesInputSchema,
+  handleCodexCleanupWorktrees,
+} from "./tools/codexCleanupWorktrees.js";
 import {
   CodexParallelTasksInputSchema,
   handleCodexParallelTasks,
@@ -191,6 +196,39 @@ Codex は呼び出しません (純粋な git read のみ)。
   },
 );
 
+// ----- codex_cleanup_worktrees -----
+
+server.registerTool(
+  "codex_cleanup_worktrees",
+  {
+    title: "git worktree の一覧取得と安全削除",
+    description: `git worktree の一覧を取得し、指定された非メイン worktree だけを削除します。
+
+Codex は呼び出しません (純粋な git 操作のみ)。
+
+削除時の制約:
+  - worktree_paths 未指定なら一覧取得のみ
+  - git worktree list に登録された path のみ削除対象
+  - メイン作業ツリーは削除不可
+  - 削除は git worktree remove --force のみで実行
+`,
+    inputSchema: CodexCleanupWorktreesInputSchema.shape,
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+  },
+  async (params) => {
+    const output = await handleCodexCleanupWorktrees(params, { projectRoot: PROJECT_ROOT });
+    return {
+      content: [{ type: "text" as const, text: formatCleanupResult(output) }],
+      structuredContent: output as unknown as Record<string, unknown>,
+    };
+  },
+);
+
 // ----- codex_parallel_tasks -----
 
 server.registerTool(
@@ -310,6 +348,33 @@ function formatInspectResult(o: {
   }
   lines.push("## review_checklist");
   for (const c of o.review_checklist) lines.push(`- [ ] ${c}`);
+  return lines.join("\n");
+}
+
+function formatCleanupResult(o: {
+  worktrees: Array<{ path: string; branch: string | null; isMain: boolean }>;
+  removed: string[];
+  errors: Array<{ path: string; reason: string }>;
+  next_action: string;
+}): string {
+  const lines: string[] = [];
+  lines.push(`## worktrees (${o.worktrees.length})`);
+  for (const w of o.worktrees) {
+    const marker = w.isMain ? "main" : "worktree";
+    const branch = w.branch ?? "detached/bare";
+    lines.push(`- [${marker}] ${w.path} (branch: ${branch})`);
+  }
+  lines.push("");
+  lines.push(`## removed (${o.removed.length})`);
+  for (const p of o.removed) lines.push(`- ${p}`);
+  if (o.removed.length === 0) lines.push("- なし");
+  lines.push("");
+  if (o.errors.length > 0) {
+    lines.push("## errors");
+    for (const e of o.errors) lines.push(`- ${e.path}: ${e.reason}`);
+    lines.push("");
+  }
+  lines.push(`next_action: ${o.next_action}`);
   return lines.join("\n");
 }
 

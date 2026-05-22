@@ -17,6 +17,12 @@ export interface GitStatusInfo {
   dirtyFiles: string[];
 }
 
+export interface GitWorktreeInfo {
+  path: string;
+  branch: string | null;
+  isMain: boolean;
+}
+
 export async function isGitRepo(cwd: string): Promise<boolean> {
   const res = await runCommand("git", ["rev-parse", "--is-inside-work-tree"], { cwd });
   return res.exitCode === 0 && res.stdout.trim() === "true";
@@ -163,6 +169,42 @@ export async function getDiffPatch(
 export async function refExists(cwd: string, ref: string): Promise<boolean> {
   const res = await runCommand("git", ["rev-parse", "--verify", "--quiet", ref], { cwd });
   return res.exitCode === 0;
+}
+
+/**
+ * List registered git worktrees. The first porcelain record is the main
+ * working tree.
+ */
+export async function listWorktrees(
+  cwd: string,
+): Promise<Array<{ path: string; branch: string | null; isMain: boolean }>> {
+  const res = await runCommand("git", ["worktree", "list", "--porcelain"], { cwd });
+  if (res.exitCode !== 0) return [];
+
+  return res.stdout
+    .split(/\r?\n\r?\n/)
+    .map((record, index) => parseWorktreeRecord(record, index === 0))
+    .filter((worktree): worktree is GitWorktreeInfo => worktree !== null);
+}
+
+function parseWorktreeRecord(record: string, isMain: boolean): GitWorktreeInfo | null {
+  const lines = record.split(/\r?\n/).filter(Boolean);
+  const worktreeLine = lines.find((line) => line.startsWith("worktree "));
+  if (!worktreeLine) return null;
+
+  const branchLine = lines.find((line) => line.startsWith("branch "));
+  const isDetachedOrBare = lines.some((line) => line === "detached" || line === "bare");
+  const branchRef = branchLine?.slice("branch ".length).trim();
+  const branch =
+    !isDetachedOrBare && branchRef
+      ? branchRef.replace(/^refs\/heads\//, "")
+      : null;
+
+  return {
+    path: worktreeLine.slice("worktree ".length).trim(),
+    branch,
+    isMain,
+  };
 }
 
 /**

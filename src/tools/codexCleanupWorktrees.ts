@@ -1,4 +1,5 @@
 import path from "node:path";
+import { realpath } from "node:fs/promises";
 import { z } from "zod";
 import { listWorktrees, removeWorktree } from "../core/git.js";
 import type { CodexCleanupWorktreesOutput } from "../types.js";
@@ -48,7 +49,15 @@ export async function handleCodexCleanupWorktrees(
     const absPath = path.isAbsolute(requestedPath)
       ? requestedPath
       : path.resolve(ctx.projectRoot, requestedPath);
-    const worktree = worktrees.find((w) => w.path === absPath);
+    let normalizedPath: string;
+    try {
+      normalizedPath = await realpath(absPath);
+    } catch {
+      errors.push({ path: absPath, reason: "登録された worktree ではありません" });
+      continue;
+    }
+
+    const worktree = worktrees.find((w) => w.path === normalizedPath);
 
     if (!worktree) {
       errors.push({ path: absPath, reason: "登録された worktree ではありません" });
@@ -56,15 +65,15 @@ export async function handleCodexCleanupWorktrees(
     }
 
     if (worktree.isMain) {
-      errors.push({ path: absPath, reason: "メイン作業ツリーは削除できません" });
+      errors.push({ path: normalizedPath, reason: "メイン作業ツリーは削除できません" });
       continue;
     }
 
-    const result = await removeWorktree(ctx.projectRoot, absPath, true);
+    const result = await removeWorktree(ctx.projectRoot, normalizedPath, true);
     if (result.ok) {
-      removed.push(absPath);
+      removed.push(normalizedPath);
     } else {
-      errors.push({ path: absPath, reason: result.error ?? "worktree の削除に失敗しました" });
+      errors.push({ path: normalizedPath, reason: result.error ?? "worktree の削除に失敗しました" });
     }
   }
 

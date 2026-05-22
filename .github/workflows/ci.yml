@@ -15,12 +15,12 @@ jobs:
     # 未設定なら ubuntu-latest (GitHub-hosted) にフォールバック。
     runs-on: ${{ fromJSON(vars.RUNNER_LABELS || '"ubuntu-latest"') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # cache: 'npm' は付けない。long-lived な self-hosted runner では ~/.npm が
       # ローカルにホットで残るため GitHub Actions cache は冗長で、その post ステップ
       # (キャッシュ保存) が self-hosted 上でハングしやすい（toolkit README 参照）。
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
 
@@ -32,6 +32,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
 
       - name: Test (path guard smoke)
         run: npm test

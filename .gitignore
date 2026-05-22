@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Logs (keep directory but ignore contents)
+logs/*
+!logs/.gitkeep
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# Test coverage
+coverage/
+*.lcov
+
+# Claude Code (local machine settings)
+.claude/settings.local.json

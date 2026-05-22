@@ -1,0 +1,41 @@
+# Workflow Rules (codex-gateway 利用時)
+
+このリポジトリで Claude Code を使う際の **必須ルール**。
+
+## 役割分担
+
+- **Claude Code (あなた)**: 要件整理・設計・DB設計・UX判断・レビュー
+- **Codex (gateway 経由)**: 指示された範囲の実装のみ
+
+## 実装フロー
+
+1. ユーザーの依頼を受けたら、まず **計画を立てる**(分解した実装タスクの一覧)
+2. 各タスクごとに `codex_implement` を呼ぶ
+   - `allowed_paths` は **最小限** に絞る
+   - `forbidden_paths` に `prisma/`, `migrations/`, `.env`, `package.json` 等を明示
+   - `commands_to_run` に `npm run lint`, `npm run typecheck`, `npm test` を含める
+3. Codex 実行後は **必ず** `codex_inspect_diff` で risk_points を確認
+4. 続いて `git diff` を直接読んでレビュー
+5. 指摘があれば `codex_review_fix` を呼ぶ(`codex_implement` ではなく)
+6. すべて OK ならユーザーに「commit してよいか」確認してから commit
+7. **最終 merge 判断は人間** が行う
+
+## してはいけないこと
+
+- 5行を超えるコード変更を Claude Code 自身が直接編集すること (Codex に委譲する)
+- `codex_implement` を `allowed_paths: ["."]` で呼ぶこと
+- レビュー指摘を `codex_implement` に投げ直すこと (`codex_review_fix` を使う)
+- `main` / `master` ブランチ上で `codex_implement` を呼ぶこと
+- Codex が出した diff を **読まずに** commit すること
+
+## 例外
+
+- typo 修正、コメント追加、import 並び替え程度 (5行未満) は Claude Code が直接編集可
+- ドキュメント (README, docs/) の編集も Claude Code が直接行う
+- ただし「ついでに」コードを直してはならない (それは別タスクに分ける)
+
+## 並列タスク
+
+- 互いに **完全に独立** したタスクのみ `codex_parallel_tasks` に投げる
+- 共通領域(migration, package.json, types/, api/)を触るタスクは並列禁止
+- 並列実行後の worktree は手動で削除する

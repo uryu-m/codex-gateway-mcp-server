@@ -1,0 +1,43 @@
+{
+  "name": "codex-gateway-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP gateway server that wraps Codex CLI with strict allowed_paths / forbidden_paths guards, command execution, and audit logging. Designed for a Claude Code (planning/review) + Codex (implementation) split workflow.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "codex-gateway-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "keywords": [
+    "mcp",
+    "claude-code",
+    "codex",
+    "openai",
+    "ai-coding",
+    "model-context-protocol"
+  ],
+  "license": "MIT"
+}

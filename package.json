@@ -12,6 +12,7 @@
     "start": "node dist/index.js",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
+    "test": "node tests/smoke-pathGuard.mjs",
     "clean": "rm -rf dist",
     "prepare": "npm run build"
   },

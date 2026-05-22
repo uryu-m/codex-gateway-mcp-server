@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # 1 workflow = 1 job. self-hosted runner は serial 実行なので、同 toolchain の
+  # build / typecheck / test は 1 job 内の steps にまとめて checkout / setup-node /
+  # npm ci の重複を避ける（toolkit の Workflow 設計指針）。
+  ci:
+    # hybrid routing: vars.RUNNER_LABELS が設定されていれば self-hosted へ、
+    # 未設定なら ubuntu-latest (GitHub-hosted) にフォールバック。
+    runs-on: ${{ fromJSON(vars.RUNNER_LABELS || '"ubuntu-latest"') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test (path guard smoke)
+        run: npm test

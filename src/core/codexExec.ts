@@ -25,6 +25,31 @@ export interface CodexExecResult {
   timedOut: boolean;
 }
 
+export async function preflightCodex(): Promise<{ ok: boolean; error?: string }> {
+  const bin = process.env.CODEX_BIN ?? "codex";
+  const res = await runCommand(bin, ["--version"], {
+    cwd: process.cwd(),
+    timeoutMs: 15_000,
+  });
+
+  if (res.exitCode === 0) {
+    return { ok: true };
+  }
+
+  if (res.exitCode === null || /ENOENT|spawn error/i.test(res.stderr)) {
+    return {
+      ok: false,
+      error: `Codex CLI (${bin}) が見つからないか実行できません。インストールと PATH を確認してください (codex --version)。CODEX_BIN で明示指定も可能です。`,
+    };
+  }
+
+  const stderrTail = res.stderr.trim().split(/\r?\n/).slice(-5).join(" / ");
+  return {
+    ok: false,
+    error: `Codex CLI (${bin}) の確認に失敗しました (exit=${res.exitCode}): ${stderrTail}`,
+  };
+}
+
 export async function runCodexExec(opts: CodexExecOptions): Promise<CodexExecResult> {
   const bin = process.env.CODEX_BIN ?? "codex";
 

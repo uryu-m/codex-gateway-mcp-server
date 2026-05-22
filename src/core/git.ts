@@ -17,6 +17,11 @@ export interface GitStatusInfo {
   dirtyFiles: string[];
 }
 
+export async function isGitRepo(cwd: string): Promise<boolean> {
+  const res = await runCommand("git", ["rev-parse", "--is-inside-work-tree"], { cwd });
+  return res.exitCode === 0 && res.stdout.trim() === "true";
+}
+
 export async function getStatus(cwd: string): Promise<GitStatusInfo> {
   const [branchRes, statusRes] = await Promise.all([
     runCommand("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd }),

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   classifyCommands,
+  preflightCodex,
   resolveApproval,
   resolveSandbox,
   resolveTimeoutSeconds,
@@ -11,6 +12,7 @@ import {
   getDiffPatch,
   getWorkingTreeStatIncludingUntracked,
   getStatus,
+  isGitRepo,
 } from "../core/git.js";
 import { AuditLogger } from "../core/logger.js";
 import {
@@ -77,6 +79,15 @@ export async function handleCodexReviewFix(
   });
 
   // Protected branch / allowed_paths input validation.
+  if (!(await isGitRepo(projectRoot))) {
+    return rejected(
+      logger,
+      basename,
+      logId,
+      `PROJECT_ROOT (${projectRoot}) は git リポジトリではありません。git 管理下のディレクトリを指定してください。`,
+    );
+  }
+
   const status = await getStatus(projectRoot);
   if (status.branch && PROTECTED_BRANCHES.includes(status.branch)) {
     return rejected(logger, basename, logId,
@@ -98,6 +109,11 @@ export async function handleCodexReviewFix(
 
   const prompt = buildReviewFixPrompt(input);
   await logger.writePrompt(basename, prompt);
+
+  const codexPreflight = await preflightCodex();
+  if (!codexPreflight.ok) {
+    return rejected(logger, basename, logId, codexPreflight.error ?? "Codex CLI の確認に失敗しました。");
+  }
 
   const codexRes = await runCodexExec({
     prompt,

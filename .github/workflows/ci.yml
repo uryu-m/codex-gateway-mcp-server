@@ -17,10 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # cache: 'npm' は付けない。long-lived な self-hosted runner では ~/.npm が
+      # ローカルにホットで残るため GitHub Actions cache は冗長で、その post ステップ
+      # (キャッシュ保存) が self-hosted 上でハングしやすい（toolkit README 参照）。
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci

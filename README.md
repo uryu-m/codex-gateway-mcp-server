@@ -118,6 +118,25 @@ claude mcp add codex-gateway -- node /absolute/path/to/codex-gateway-mcp/dist/in
 
 ---
 
+## カスタムスラッシュコマンド
+
+本リポジトリには、5つのツールを定型ワークフローで呼ぶための Claude Code スラッシュコマンドを `.claude/commands/` に同梱しています。`codex-gateway` MCP サーバーが接続済みであれば、Claude Code 上でそのまま使えます。
+
+| コマンド | 役割 | 対応ツール |
+|---|---|---|
+| `/codex` | コマンド一覧と原則を表示 | (なし) |
+| `/codex-implement <タスク>` | 限定範囲の実装 | `codex_implement` |
+| `/codex-review-fix [指摘]` | レビュー指摘の修正のみ | `codex_review_fix` |
+| `/codex-inspect [base] [target]` | 差分のレビュー整形 | `codex_inspect_diff` |
+| `/codex-parallel <タスク群>` | worktree で並列実装 | `codex_parallel_tasks` |
+| `/codex-cleanup [path...]` | worktree の一覧・安全削除 | `codex_cleanup_worktrees` |
+
+各コマンドは「設計・レビューは Claude Code、実装は Codex」という分業ルール(`allowed_paths` を最小限に絞る、破壊的実行前に確認する、diff を読んでからコミットする等)を内蔵しています。
+
+> **前提**: 本リポジトリ自身を Claude Code で開く場合は、同梱の `.mcp.json` が `codex-gateway` を `dist/index.js` として登録します。利用前に `npm run build` を済ませ、`/mcp` で5ツールが見えることを確認してください。別リポジトリで使う場合は、そのリポジトリ側の `.mcp.json` でサーバー名を `codex-gateway` として登録し、`.claude/commands/` をコピーしてください。
+
+---
+
 ## 最小の使い方
 
 Claude Code のチャットで:
@@ -199,6 +218,9 @@ logs/
 
 ```
 codex-gateway-mcp/
+├─ .claude/
+│  └─ commands/                 # カスタムスラッシュコマンド (/codex-implement 等)
+├─ .mcp.json                    # 本リポジトリ用の codex-gateway 登録 (ドッグフード)
 ├─ src/
 │  ├─ index.ts                  # MCP サーバーエントリ
 │  ├─ types.ts                  # 共有型

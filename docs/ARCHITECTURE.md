@@ -217,7 +217,7 @@ git worktree remove ../worktrees/store-form-ui
 
 ## 10. 既知の制約
 
-- **Codex CLI のバージョン依存**: `--cd`, `--sandbox`, `--ask-for-approval`, `--skip-git-repo-check` フラグの存在を前提にしている。Codex 側で破壊的変更があったら `codexExec.ts` を更新する必要がある。
+- **Codex CLI のバージョン依存**: `--cd`, `--sandbox`, `--skip-git-repo-check` フラグと `-c approval_policy=<v>` の config override 形式に依存している (codex >= 0.130 で `--ask-for-approval` フラグが削除されたため後者に切り替え済)。Codex 側で破壊的変更があったら `codexExec.ts` を更新する必要がある。
 - **Windows 未検証**: `sh -c` で `commands_to_run` を実行しているため、Windows ネイティブ環境では PowerShell 等への切替が必要(WSL 経由なら問題なし)。
 - **同時実行**: 同じプロジェクトに対して複数の `codex_implement` を並行で呼ぶと git 状態の取り合いになります。並列実行は `codex_parallel_tasks` (worktree 分離)を使ってください。
 - **ログのサイズ**: 1実行で diff.patch + commands.log が数十MB になることがあります。`LOG_DIR` の容量と定期削除に注意。

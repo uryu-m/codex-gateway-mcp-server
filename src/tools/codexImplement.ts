@@ -63,7 +63,9 @@ export const CodexImplementInputSchema = z
     model: z
       .string()
       .optional()
-      .describe("Codexのモデル指定 (例: 'gpt-5-codex')。未指定時はCodexの既定。"),
+      .describe(
+        "Codexのモデル指定 (例: 'gpt-5.5')。未指定時は CODEX_MODEL、さらに未設定なら Codex の既定。",
+      ),
     sandbox: z
       .enum(["read-only", "workspace-write", "danger-full-access"])
       .optional()

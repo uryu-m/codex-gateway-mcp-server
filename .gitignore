@@ -33,3 +33,7 @@ coverage/
 
 # Claude Code (local machine settings)
 .claude/settings.local.json
+
+# Local agent/codex tooling artifacts (machine-local)
+.agents/
+.codex/

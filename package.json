@@ -16,7 +16,7 @@
     "start": "node dist/index.js",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/smoke-pathGuard.mjs",
+    "test": "node tests/smoke-pathGuard.mjs && node tests/smoke-codexExec.mjs",
     "clean": "rm -rf dist",
     "prepare": "npm run build"
   },

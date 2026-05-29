@@ -48,7 +48,12 @@ export const CodexReviewFixInputSchema = z
       .array(z.string().min(1))
       .optional()
       .describe("修正後に実行するコマンド (lint/typecheck/test など)。"),
-    model: z.string().optional(),
+    model: z
+      .string()
+      .optional()
+      .describe(
+        "Codexのモデル指定 (例: 'gpt-5.5')。未指定時は CODEX_MODEL、さらに未設定なら Codex の既定。",
+      ),
     sandbox: z
       .enum(["read-only", "workspace-write", "danger-full-access"])
       .optional(),

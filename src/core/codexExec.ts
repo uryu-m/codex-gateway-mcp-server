@@ -67,8 +67,9 @@ export async function runCodexExec(opts: CodexExecOptions): Promise<CodexExecRes
     "--skip-git-repo-check",
   ];
 
-  if (opts.model) {
-    args.push("--model", opts.model);
+  const model = resolveModel(opts.model);
+  if (model) {
+    args.push("--model", model);
   }
 
   // Hyphen tells codex to read the prompt body from stdin.
@@ -114,6 +115,14 @@ export function resolveApproval(override?: CodexApprovalPolicy): CodexApprovalPo
     return env;
   }
   return "on-request";
+}
+
+export function resolveModel(override?: string): string | undefined {
+  const explicit = override?.trim();
+  if (explicit) return explicit;
+
+  const env = process.env.CODEX_MODEL?.trim();
+  return env || undefined;
 }
 
 export function resolveTimeoutSeconds(): number {

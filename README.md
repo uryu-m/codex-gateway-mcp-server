@@ -1,5 +1,47 @@
 # codex-gateway-mcp
 
+`codex-gateway-mcp-server` is an MCP gateway for running Codex CLI safely inside development and open-source maintenance workflows.
+
+Instead of letting Codex modify a repository freely, this project defines a controlled execution boundary around Codex. It is designed to help teams and OSS maintainers delegate implementation tasks to Codex while keeping planning, review, permissions, command policies, and auditability under control.
+
+## Why this exists
+
+AI coding agents are powerful, but using them directly in real repositories introduces risks:
+
+- unintended file changes
+- dangerous shell commands
+- accidental execution on protected branches
+- unclear responsibility between planning, implementation, and review
+- lack of audit logs for AI-driven changes
+
+This project provides a gateway layer between MCP clients and Codex CLI so that Codex can be used as an implementation agent within a safer, reviewable workflow.
+
+## Key features
+
+- Allow/deny path controls (`allowed_paths` / `forbidden_paths`)
+- Dangerous command blocking (`rm -rf`, `sudo`, `git push`, `curl`, …)
+- Protected branch checks (`main` / `master` / `develop` / `production`)
+- Lint, typecheck, and test execution
+- Git diff inspection for review
+- Audit logging of every invocation (inputs, prompt, diff, command output)
+- Designed for a split-agent workflow:
+  - Claude Code or a human handles planning and review
+  - Codex handles scoped implementation tasks
+
+## Intended use case
+
+This project is especially useful for OSS maintainers who want to use Codex to reduce implementation and maintenance workload while preserving control over repository safety, reviewability, and traceability.
+
+## Documentation
+
+- [Architecture](./docs/ARCHITECTURE.md) · [Security model](./docs/SECURITY.md) · [Usage & tool schemas](./docs/USAGE.md)
+- [Roadmap](./docs/ROADMAP.md) · [Maintaining (recommended topics, releases)](./docs/MAINTAINING.md) · [Contributing](./CONTRIBUTING.md)
+- [OSS maintenance workflow example](./examples/oss-maintenance-workflow.md)
+
+> 🇯🇵 **日本語ドキュメントは以下に続きます。** / _Japanese documentation continues below._
+
+---
+
 > **Claude Code が「設計・レビュー」、Codex が「実装」** を担当する分業ワークフローのための、Codex CLI 向け MCP ゲートウェイ。
 
 Claude Code から Codex CLI を直接呼ぶのではなく、本ゲートウェイを間に挟むことで、

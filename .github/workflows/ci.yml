@@ -6,6 +6,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+# self-hosted runner は serial 実行のため、同一 ref への push が連続すると古い run が
+# キューに積み上がる。新しい commit が来たら進行中/待機中の古い run をキャンセルして
+# 順番待ちを防ぐ（toolkit の CI 高速化指針）。
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # 1 workflow = 1 job. self-hosted runner は serial 実行なので、同 toolchain の
   # build / typecheck / test は 1 job 内の steps にまとめて checkout / setup-node /
